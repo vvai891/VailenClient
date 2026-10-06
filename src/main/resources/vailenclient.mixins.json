@@ -3,7 +3,8 @@
   "package": "com.vailen.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "LightmapTextureManagerMixin"
+    "LightmapTextureManagerMixin",
+    "SwingAnimationMixin"
   ],
   "injectors": {
     "defaultRequire": 1
