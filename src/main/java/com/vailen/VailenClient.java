@@ -1,6 +1,7 @@
 package com.vailen;
 
 import com.vailen.gui.ClickGuiScreen;
+import com.vailen.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -23,6 +24,18 @@ public class VailenClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (openGuiKey.wasPressed()) {
                 client.setScreen(new ClickGuiScreen());
+            }
+
+            if (client.player == null) return;
+
+            // SPRINT
+            if (ModuleManager.isEnabled("Sprint")) {
+                if (client.options.forwardKey.isPressed()
+                        && !client.player.isSneaking()
+                        && !client.player.isUsingItem()
+                        && !client.player.horizontalCollision) {
+                    client.player.setSprinting(true);
+                }
             }
         });
     }
