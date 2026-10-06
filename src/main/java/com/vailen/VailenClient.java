@@ -89,9 +89,7 @@ public class VailenClient implements ClientModInitializer {
                 }
 
                 if (best != null) {
-                    // Наводка
                     if (bestDist <= aimRange) {
-                        // Плавный поворот на цель
                         double dx = best.getX() - client.player.getX();
                         double dz = best.getZ() - client.player.getZ();
                         double dy = (best.getY() + best.getStandingEyeHeight())
@@ -105,12 +103,10 @@ public class VailenClient implements ClientModInitializer {
                         client.player.setPitch(pitch);
                     }
 
-                    // Удар
                     if (bestDist <= attackRange
                             && now - lastKillAuraHit >= delay
                             && client.player.getAttackCooldownProgress(0f) >= 1.0f) {
 
-                        // Умные криты — не бьём если не падаем и не хотим
                         boolean canCrit = !client.player.isOnGround()
                                        && client.player.getVelocity().y < 0
                                        && !client.player.isClimbing()
@@ -131,6 +127,21 @@ public class VailenClient implements ClientModInitializer {
                             if (!ka.isKeepSprint() && wasSprinting) {
                                 client.player.setSprinting(true);
                             }
+                        }
+                    }
+                }
+            }
+
+            // AUTOATTACK — бьёт цель строго под прицелом
+            if (ModuleManager.isEnabled("AutoAttack")) {
+                if (client.crosshairTarget instanceof EntityHitResult ehr) {
+                    Entity target = ehr.getEntity();
+                    if (target instanceof LivingEntity living && target != client.player) {
+                        boolean enemy = (target instanceof PlayerEntity)
+                                     || (target instanceof HostileEntity);
+                        if (enemy && client.player.getAttackCooldownProgress(0f) >= 1.0f) {
+                            client.interactionManager.attackEntity(client.player, living);
+                            client.player.swingHand(Hand.MAIN_HAND);
                         }
                     }
                 }
