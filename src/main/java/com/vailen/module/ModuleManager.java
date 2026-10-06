@@ -12,6 +12,7 @@ public class ModuleManager {
         MODULES.add(new Module("KillAura", Category.COMBAT));
         MODULES.add(new Module("TriggerBot", Category.COMBAT));
         MODULES.add(new Module("AutoAttack", Category.COMBAT));
+        MODULES.add(new AutoTotem());
         MODULES.add(new Module("AutoClicker", Category.COMBAT));
 
         // Movement
