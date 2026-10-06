@@ -35,6 +35,7 @@ public class HudRenderer {
         renderPotions(ctx, mc);
         renderPlayerInfo(ctx, mc);
         renderCoords(ctx, mc);
+        renderNametags(ctx, mc);
     }
 
     // ========== WATERMARK ==========
@@ -212,6 +213,52 @@ public class HudRenderer {
 
         ctx.fill(x, y, x + w, y + h, BG);
         ctx.drawTextWithShadow(mc.textRenderer, text, x + 6, y + 3, TEXT);
+    }
+
+    // ========== NAMETAGS ==========
+    private static void renderNametags(DrawContext ctx, MinecraftClient mc) {
+        if (mc.world == null || mc.player == null) return;
+
+        for (net.minecraft.entity.player.PlayerEntity p : mc.world.getPlayers()) {
+            if (p == mc.player) continue;
+            if (p.isInvisible()) continue;
+
+            double dist = mc.player.distanceTo(p);
+            if (dist > 64) continue;
+
+            net.minecraft.util.math.Vec3d pos = p.getPos();
+            net.minecraft.util.math.Vec3d cam = mc.gameRenderer.getCamera().getPos();
+
+            double rx = pos.x - cam.x;
+            double ry = pos.y + p.getHeight() + 0.6 - cam.y;
+            double rz = pos.z - cam.z;
+
+            double yaw = Math.toRadians(mc.gameRenderer.getCamera().getYaw());
+            double cos = Math.cos(yaw);
+            double sin = Math.sin(yaw);
+
+            double x1 = rx * cos - rz * sin;
+            double z1 = rx * sin + rz * cos;
+
+            if (z1 < 0.1) continue;
+
+            double fov = mc.options.getFov().getValue();
+            double scale = (ctx.getScaledWindowHeight() / 2.0) / Math.tan(Math.toRadians(fov / 2.0));
+
+            double screenX = ctx.getScaledWindowWidth() / 2.0 + (x1 / z1) * scale;
+            double screenY = ctx.getScaledWindowHeight() / 2.0 - (ry / z1) * scale;
+
+            String name = p.getName().getString();
+            String hpStr = String.format("%.1f", p.getHealth());
+            String text = "§f" + name + " §7[" + String.format("%.0f", dist) + "m] §c" + hpStr;
+
+            int tw = mc.textRenderer.getWidth(text);
+            int x = (int)(screenX - tw / 2.0);
+            int y = (int)(screenY);
+
+            ctx.fill(x - 3, y - 2, x + tw + 3, y + 10, 0x88000000);
+            ctx.drawTextWithShadow(mc.textRenderer, text, x, y, 0xFFFFFFFF);
+        }
     }
 
     // ========== Утилиты ==========
