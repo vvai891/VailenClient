@@ -3,6 +3,7 @@ package com.vailen;
 import com.vailen.gui.ClickGuiScreen;
 import com.vailen.gui.VisualsScreen;
 import com.vailen.hud.HudRenderer;
+import com.vailen.module.Module;
 import com.vailen.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -20,8 +21,8 @@ import net.minecraft.util.hit.EntityHitResult;
 import org.lwjgl.glfw.GLFW;
 
 public class VailenClient implements ClientModInitializer {
-    public static KeyBinding openGuiKey;      // Right Shift → ClickGui
-    public static KeyBinding openVisualsKey;  // G → VisualsScreen
+    public static KeyBinding openGuiKey;
+    public static KeyBinding openVisualsKey;
 
     private static double oldGamma = 1.0;
     private static boolean fullbrightActive = false;
@@ -29,6 +30,7 @@ public class VailenClient implements ClientModInitializer {
     private static boolean noParticlesActive = false;
 
     private static long lastTriggerHit = 0L;
+    private static long lastKillAuraHit = 0L;
 
     @Override
     public void onInitializeClient() {
@@ -47,12 +49,8 @@ public class VailenClient implements ClientModInitializer {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (openGuiKey.wasPressed()) {
-                client.setScreen(new ClickGuiScreen());
-            }
-            while (openVisualsKey.wasPressed()) {
-                client.setScreen(new VisualsScreen());
-            }
+            while (openGuiKey.wasPressed()) client.setScreen(new ClickGuiScreen());
+            while (openVisualsKey.wasPressed()) client.setScreen(new VisualsScreen());
 
             if (client.player == null || client.world == null) return;
 
@@ -63,6 +61,78 @@ public class VailenClient implements ClientModInitializer {
                         && !client.player.isUsingItem()
                         && !client.player.horizontalCollision) {
                     client.player.setSprinting(true);
+                }
+            }
+
+            // KILLAURA
+            if (ModuleManager.isEnabled("KillAura")) {
+                Module ka = ModuleManager.get("KillAura");
+                float attackRange = ka.getAttackRange();
+                float aimRange = ka.getAimRange();
+                long delay = ka.getDelayMs();
+                long now = System.currentTimeMillis();
+
+                LivingEntity best = null;
+                double bestDist = aimRange;
+
+                for (Entity e : client.world.getEntities()) {
+                    if (e == client.player) continue;
+                    if (!(e instanceof LivingEntity living)) continue;
+                    if (!(living instanceof PlayerEntity)
+                            && !(living instanceof HostileEntity)) continue;
+
+                    double d = client.player.distanceTo(e);
+                    if (d <= bestDist) {
+                        bestDist = d;
+                        best = living;
+                    }
+                }
+
+                if (best != null) {
+                    // Наводка
+                    if (bestDist <= aimRange) {
+                        // Плавный поворот на цель
+                        double dx = best.getX() - client.player.getX();
+                        double dz = best.getZ() - client.player.getZ();
+                        double dy = (best.getY() + best.getStandingEyeHeight())
+                                  - (client.player.getY() + client.player.getStandingEyeHeight());
+
+                        double dist = Math.sqrt(dx * dx + dz * dz);
+                        float yaw = (float)(Math.toDegrees(Math.atan2(dz, dx)) - 90);
+                        float pitch = (float)(-Math.toDegrees(Math.atan2(dy, dist)));
+
+                        client.player.setYaw(yaw);
+                        client.player.setPitch(pitch);
+                    }
+
+                    // Удар
+                    if (bestDist <= attackRange
+                            && now - lastKillAuraHit >= delay
+                            && client.player.getAttackCooldownProgress(0f) >= 1.0f) {
+
+                        // Умные криты — не бьём если не падаем и не хотим
+                        boolean canCrit = !client.player.isOnGround()
+                                       && client.player.getVelocity().y < 0
+                                       && !client.player.isClimbing()
+                                       && !client.player.isTouchingWater();
+
+                        boolean doHit = !ka.isSmartCrits() || canCrit;
+
+                        if (doHit) {
+                            boolean wasSprinting = client.player.isSprinting();
+                            if (!ka.isKeepSprint()) {
+                                client.player.setSprinting(false);
+                            }
+
+                            client.interactionManager.attackEntity(client.player, best);
+                            client.player.swingHand(Hand.MAIN_HAND);
+                            lastKillAuraHit = now;
+
+                            if (!ka.isKeepSprint() && wasSprinting) {
+                                client.player.setSprinting(true);
+                            }
+                        }
+                    }
                 }
             }
 
