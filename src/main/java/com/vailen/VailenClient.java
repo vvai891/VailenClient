@@ -1,5 +1,6 @@
 package com.vailen;
 
+import com.vailen.gui.ClickGuiScreen;
 import com.vailen.gui.VisualsScreen;
 import com.vailen.hud.HudRenderer;
 import com.vailen.module.ModuleManager;
@@ -19,7 +20,8 @@ import net.minecraft.util.hit.EntityHitResult;
 import org.lwjgl.glfw.GLFW;
 
 public class VailenClient implements ClientModInitializer {
-    public static KeyBinding openGuiKey;
+    public static KeyBinding openGuiKey;      // Right Shift → ClickGui
+    public static KeyBinding openVisualsKey;  // G → VisualsScreen
 
     private static double oldGamma = 1.0;
     private static boolean fullbrightActive = false;
@@ -37,9 +39,18 @@ public class VailenClient implements ClientModInitializer {
                 "category.vailenclient"
         ));
 
+        openVisualsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.vailenclient.visuals",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_G,
+                "category.vailenclient"
+        ));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            // Right Shift → VisualsScreen
             while (openGuiKey.wasPressed()) {
+                client.setScreen(new ClickGuiScreen());
+            }
+            while (openVisualsKey.wasPressed()) {
                 client.setScreen(new VisualsScreen());
             }
 
