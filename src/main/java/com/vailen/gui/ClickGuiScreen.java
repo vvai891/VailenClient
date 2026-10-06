@@ -51,6 +51,11 @@ public class ClickGuiScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // no-op: убираем встроенный блюр
+    }
+
+    @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
         ctx.fill(0, 0, this.width, this.height, 0x66000000);
 
