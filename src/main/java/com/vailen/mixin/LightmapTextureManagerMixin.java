@@ -15,7 +15,9 @@ public class LightmapTextureManagerMixin {
     private void vailenclient$forceGamma(CallbackInfoReturnable<Object> cir) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc == null || mc.options == null) return;
-        if (this == mc.options.getGamma() && ModuleManager.isEnabled("Fullbright")) {
+        Object self = this;
+        Object gamma = mc.options.getGamma();
+        if (self == gamma && ModuleManager.isEnabled("Fullbright")) {
             cir.setReturnValue(15.0);
         }
     }
