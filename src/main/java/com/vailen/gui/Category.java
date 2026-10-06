@@ -3,6 +3,7 @@ package com.vailen.gui;
 public enum Category {
     COMBAT("Combat"),
     MOVEMENT("Movement"),
+    VISUALS("Visuals"),
     RENDER("Render"),
     MISC("Misc");
 
