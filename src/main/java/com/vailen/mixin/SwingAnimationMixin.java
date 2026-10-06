@@ -18,7 +18,7 @@ public class SwingAnimationMixin {
             method = "renderFirstPersonItem",
             at = @At("HEAD"),
             argsOnly = true,
-            index = 6
+            index = 5
     )
     private float vailenclient$modifySwing(
             float swingProgress,
@@ -26,6 +26,7 @@ public class SwingAnimationMixin {
             float tickDelta,
             float pitch,
             Hand hand,
+            float swingProgressArg,
             ItemStack item,
             float equipProgress,
             MatrixStack matrices,
