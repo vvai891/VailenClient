@@ -8,14 +8,26 @@ public class ModuleManager {
     private static final List<Module> MODULES = new ArrayList<>();
 
     static {
+        // Combat
         MODULES.add(new Module("KillAura", Category.COMBAT));
         MODULES.add(new Module("AutoClicker", Category.COMBAT));
+
+        // Movement
         MODULES.add(new Module("Sprint", Category.MOVEMENT));
         MODULES.add(new Module("Fly", Category.MOVEMENT));
+
+        // Visuals
+        MODULES.add(new Module("Fullbright", Category.VISUALS));
+        MODULES.add(new Module("NoWeather", Category.VISUALS));
+        MODULES.add(new Module("NoParticles", Category.VISUALS));
+
+        // Render
         MODULES.add(new Module("ESP", Category.RENDER));
-        MODULES.add(new Module("Fullbright", Category.RENDER));
-        MODULES.add(new Module("Timer", Category.MISC));
+        MODULES.add(new Module("FPS Display", Category.RENDER));
+
+        // Misc
         MODULES.add(new Module("AntiAFK", Category.MISC));
+        MODULES.add(new Module("Timer", Category.MISC));
     }
 
     public static List<Module> getModules() { return MODULES; }
