@@ -52,7 +52,7 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        this.renderBackground(ctx, mouseX, mouseY, delta);
+        ctx.fill(0, 0, this.width, this.height, 0x66000000);
 
         ctx.fill(panelX + 4, panelY + 4, panelX + panelW + 4, panelY + panelH + 4, 0x44000000);
         ctx.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_BG);
