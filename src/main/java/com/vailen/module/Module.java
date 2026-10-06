@@ -1,4 +1,4 @@
-package com.vailen.module;
+ package com.vailen.module;
 
 import com.vailen.gui.Category;
 import org.lwjgl.glfw.GLFW;
@@ -103,6 +103,7 @@ public class Module {
         }
     }
 
+    // === KEYBIND ===
     public int getKeybind() { return keybind; }
     public void setKeybind(int key) { this.keybind = key; }
     public boolean hasKeybind() { return keybind > 0; }
@@ -136,4 +137,4 @@ public class Module {
     public void toggle() { enabled = !enabled; }
     public void onEnable() {}
     public void onDisable() {}
-}
+    }
