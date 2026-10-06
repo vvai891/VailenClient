@@ -22,8 +22,10 @@ public class ModuleManager {
         MODULES.add(new Module("NoParticles", Category.VISUALS));
 
         // Render
-        MODULES.add(new Module("ESP", Category.RENDER));
+        MODULES.add(new Module("Watermark", Category.RENDER));
+        MODULES.add(new Module("ArrayList", Category.RENDER));
         MODULES.add(new Module("FPS Display", Category.RENDER));
+        MODULES.add(new Module("Coordinates", Category.RENDER));
 
         // Misc
         MODULES.add(new Module("AntiAFK", Category.MISC));
