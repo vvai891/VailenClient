@@ -16,13 +16,11 @@ public class ModuleManager {
         MODULES.add(new Module("Sprint", Category.MOVEMENT));
         MODULES.add(new Module("Fly", Category.MOVEMENT));
 
-        // Visuals — HUD теперь тут
-        MODULES.add(new Module("HUD", Category.VISUALS));
-        MODULES.add(new Module("Fullbright", Category.VISUALS));
-        MODULES.add(new Module("NoWeather", Category.VISUALS));
-        MODULES.add(new Module("NoParticles", Category.VISUALS));
-
-        // Render
+        // Render (сюда всё из Visuals)
+        MODULES.add(new Module("HUD", Category.RENDER));
+        MODULES.add(new Module("Fullbright", Category.RENDER));
+        MODULES.add(new Module("NoWeather", Category.RENDER));
+        MODULES.add(new Module("NoParticles", Category.RENDER));
         MODULES.add(new Module("ESP", Category.RENDER));
 
         // Misc
