@@ -21,11 +21,8 @@ public class ModuleManager {
         MODULES.add(new Module("NoWeather", Category.VISUALS));
         MODULES.add(new Module("NoParticles", Category.VISUALS));
 
-        // Render (HUD)
-        MODULES.add(new Module("Watermark", Category.RENDER));
-        MODULES.add(new Module("ArrayList", Category.RENDER));
-        MODULES.add(new Module("FPS Display", Category.RENDER));
-        MODULES.add(new Module("Coordinates", Category.RENDER));
+        // Render — один модуль HUD, включает всё
+        MODULES.add(new Module("HUD", Category.RENDER));
 
         // Misc
         MODULES.add(new Module("AntiAFK", Category.MISC));
