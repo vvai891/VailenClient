@@ -1,7 +1,6 @@
 package com.vailen;
 
-import com.vailen.gui.ClickGuiScreen;
-import com.vailen.hud.HudManager;
+import com.vailen.gui.VisualsScreen;
 import com.vailen.hud.HudRenderer;
 import com.vailen.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -10,7 +9,13 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticlesMode;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.EntityHitResult;
 import org.lwjgl.glfw.GLFW;
 
 public class VailenClient implements ClientModInitializer {
@@ -21,10 +26,10 @@ public class VailenClient implements ClientModInitializer {
     private static ParticlesMode oldParticles = ParticlesMode.ALL;
     private static boolean noParticlesActive = false;
 
+    private static long lastTriggerHit = 0L;
+
     @Override
     public void onInitializeClient() {
-        HudManager.load();
-
         openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.vailenclient.opengui",
                 InputUtil.Type.KEYSYM,
@@ -33,8 +38,9 @@ public class VailenClient implements ClientModInitializer {
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Right Shift → VisualsScreen
             while (openGuiKey.wasPressed()) {
-                client.setScreen(new ClickGuiScreen());
+                client.setScreen(new VisualsScreen());
             }
 
             if (client.player == null || client.world == null) return;
@@ -46,6 +52,26 @@ public class VailenClient implements ClientModInitializer {
                         && !client.player.isUsingItem()
                         && !client.player.horizontalCollision) {
                     client.player.setSprinting(true);
+                }
+            }
+
+            // TRIGGERBOT
+            if (ModuleManager.isEnabled("TriggerBot")) {
+                if (client.crosshairTarget instanceof EntityHitResult ehr) {
+                    Entity target = ehr.getEntity();
+                    if (target instanceof LivingEntity living && target != client.player) {
+                        boolean isEnemy = (target instanceof PlayerEntity)
+                                       || (target instanceof HostileEntity);
+                        if (isEnemy && client.player.getAttackCooldownProgress(0f) >= 1.0f) {
+                            long delay = ModuleManager.get("TriggerBot").getDelayMs();
+                            long now = System.currentTimeMillis();
+                            if (now - lastTriggerHit >= delay) {
+                                client.interactionManager.attackEntity(client.player, living);
+                                client.player.swingHand(Hand.MAIN_HAND);
+                                lastTriggerHit = now;
+                            }
+                        }
+                    }
                 }
             }
 
