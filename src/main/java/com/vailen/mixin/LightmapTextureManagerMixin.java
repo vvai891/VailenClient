@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class LightmapTextureManagerMixin {
 
     @Inject(method = "getBrightness", at = @At("HEAD"), cancellable = true)
-    private void vailenclient$forceFullbright(DimensionType type, int lightLevel, CallbackInfoReturnable<Float> cir) {
+    private static void vailenclient$forceFullbright(DimensionType type, int lightLevel, CallbackInfoReturnable<Float> cir) {
         if (ModuleManager.isEnabled("Fullbright")) {
             cir.setReturnValue(1.0f);
         }
