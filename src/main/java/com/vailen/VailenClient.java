@@ -8,15 +8,18 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.option.ParticleStatus;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class VailenClient implements ClientModInitializer {
     public static KeyBinding openGuiKey;
 
-    // Fullbright — запоминаем старую гамму, чтобы вернуть при выключении
     private static double oldGamma = 1.0;
     private static boolean fullbrightActive = false;
+
+    private static ParticleStatus oldParticles = ParticleStatus.ALL;
+    private static boolean noParticlesActive = false;
 
     @Override
     public void onInitializeClient() {
@@ -57,9 +60,17 @@ public class VailenClient implements ClientModInitializer {
                 fullbrightActive = false;
             }
 
-            // NO PARTICLES
-            if (ModuleManager.isEnabled("NoParticles")) {
-                client.particleManager.clearParticles();
+            // NO PARTICLES — через настройку "Минимум частиц"
+            boolean np = ModuleManager.isEnabled("NoParticles");
+            if (np && !noParticlesActive) {
+                oldParticles = client.options.getParticles().getValue();
+                noParticlesActive = true;
+            }
+            if (np) {
+                client.options.getParticles().setValue(ParticleStatus.MINIMAL);
+            } else if (noParticlesActive) {
+                client.options.getParticles().setValue(oldParticles);
+                noParticlesActive = false;
             }
 
             // NO WEATHER
@@ -69,7 +80,6 @@ public class VailenClient implements ClientModInitializer {
             }
         });
 
-        // HUD — FPS Display
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {
             MinecraftClient mc = MinecraftClient.getInstance();
             if (mc.player == null) return;
