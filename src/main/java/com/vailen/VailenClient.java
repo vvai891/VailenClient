@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.option.ParticleStatus;
+import net.minecraft.client.option.ParticlesMode;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,7 +18,7 @@ public class VailenClient implements ClientModInitializer {
     private static double oldGamma = 1.0;
     private static boolean fullbrightActive = false;
 
-    private static ParticleStatus oldParticles = ParticleStatus.ALL;
+    private static ParticlesMode oldParticles = ParticlesMode.ALL;
     private static boolean noParticlesActive = false;
 
     @Override
@@ -37,7 +37,6 @@ public class VailenClient implements ClientModInitializer {
 
             if (client.player == null || client.world == null) return;
 
-            // SPRINT
             if (ModuleManager.isEnabled("Sprint")) {
                 if (client.options.forwardKey.isPressed()
                         && !client.player.isSneaking()
@@ -47,7 +46,6 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // FULLBRIGHT
             boolean fb = ModuleManager.isEnabled("Fullbright");
             if (fb && !fullbrightActive) {
                 oldGamma = client.options.getGamma().getValue();
@@ -60,20 +58,18 @@ public class VailenClient implements ClientModInitializer {
                 fullbrightActive = false;
             }
 
-            // NO PARTICLES — через настройку "Минимум частиц"
             boolean np = ModuleManager.isEnabled("NoParticles");
             if (np && !noParticlesActive) {
                 oldParticles = client.options.getParticles().getValue();
                 noParticlesActive = true;
             }
             if (np) {
-                client.options.getParticles().setValue(ParticleStatus.MINIMAL);
+                client.options.getParticles().setValue(ParticlesMode.MINIMAL);
             } else if (noParticlesActive) {
                 client.options.getParticles().setValue(oldParticles);
                 noParticlesActive = false;
             }
 
-            // NO WEATHER
             if (ModuleManager.isEnabled("NoWeather")) {
                 client.world.setRainGradient(0f);
                 client.world.setThunderGradient(0f);
