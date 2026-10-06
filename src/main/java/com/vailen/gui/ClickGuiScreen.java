@@ -1,11 +1,11 @@
 package com.vailen.gui;
 
 import com.vailen.module.Module;
+import com.vailen.module.ModuleManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,18 +20,7 @@ public class ClickGuiScreen extends Screen {
     private static final int TEXT        = 0xFFFFFFFF;
     private static final int TEXT_DIM    = 0xFFAAAAAA;
 
-    private static final List<Module> MODULES = new ArrayList<>();
-    static {
-        MODULES.add(new Module("KillAura", Category.COMBAT));
-        MODULES.add(new Module("AutoClicker", Category.COMBAT));
-        MODULES.add(new Module("Sprint", Category.MOVEMENT));
-        MODULES.add(new Module("Fly", Category.MOVEMENT));
-        MODULES.add(new Module("ESP", Category.RENDER));
-        MODULES.add(new Module("Fullbright", Category.RENDER));
-        MODULES.add(new Module("Timer", Category.MISC));
-        MODULES.add(new Module("AntiAFK", Category.MISC));
-    }
-
+    private final List<Module> MODULES = ModuleManager.getModules();
     private final Map<Category, Integer> scroll = new HashMap<>();
     private Category selectedCategory = Category.COMBAT;
     private boolean dragging = false;
@@ -142,7 +131,6 @@ public class ClickGuiScreen extends Screen {
             int y = modY + sc;
             if (mx >= modX && mx <= modX + modW && my >= y && my <= y + 20) {
                 m.toggle();
-                if (m.isEnabled()) m.onEnable(); else m.onDisable();
                 return true;
             }
             modY += 24;
@@ -177,4 +165,4 @@ public class ClickGuiScreen extends Screen {
     public boolean shouldPause() {
         return false;
     }
-}
+                }
