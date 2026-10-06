@@ -13,8 +13,8 @@ import java.util.Map;
 
 public class ClickGuiScreen extends Screen {
 
-    // ========== ЦВЕТА (Meteor-стиль, фиолетовый акцент) ==========
-    private static final int PANEL_BG     = 0xE80F0F1A;
+    // ========== ЦВЕТА Meteor ==========
+    private static final int PANEL_BG     = 0xF00F0F1A;
     private static final int HEADER_BG    = 0xFF15152A;
     private static final int ACCENT       = 0xFF8B5CF6;
     private static final int MODULE_BG    = 0xAA1A1A26;
@@ -23,25 +23,28 @@ public class ClickGuiScreen extends Screen {
     private static final int TEXT         = 0xFFDDDDDD;
     private static final int TEXT_ON      = 0xFFFFFFFF;
     private static final int TEXT_DIM     = 0xFF888888;
-    private static final int SHADOW       = 0x66000000;
+    private static final int SHADOW       = 0x88000000;
     private static final int SEARCH_BG    = 0xFF1A1A26;
+    private static final int BORDER       = 0x33FFFFFF;
 
-    private static final int PANEL_W      = 90;
-    private static final int HEADER_H     = 16;
-    private static final int MODULE_H     = 13;
-    private static final int MODULE_GAP   = 1;
-    private static final int PANEL_PAD    = 3;
-    private static final int SEARCH_H     = 14;
+    // ========== РАЗМЕРЫ (подбираются в init) ==========
+    private int PANEL_W;
+    private int HEADER_H = 16;
+    private int MODULE_H = 13;
+    private int MODULE_GAP = 1;
+    private int PANEL_PAD = 3;
+    private int SEARCH_H = 13;
+    private int PANEL_GAP = 4;
 
     private final List<Module> MODULES = ModuleManager.getModules();
     private final Map<Category, List<Module>> byCategory = new HashMap<>();
 
     private static class PanelState {
         Category category;
-        int x, y;
+        int x, y, h;
         boolean dragging;
         int dragX, dragY;
-        PanelState(Category c, int x, int y) { this.category = c; this.x = x; this.y = y; }
+        PanelState(Category c) { this.category = c; }
     }
 
     private final List<PanelState> panels = new ArrayList<>();
@@ -53,20 +56,46 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     protected void init() {
-        // Группируем модули по категориям
         byCategory.clear();
         for (Category c : Category.values()) byCategory.put(c, new ArrayList<>());
         for (Module m : MODULES) byCategory.get(m.getCategory()).add(m);
 
-        // Раскладываем панели в ряд
         panels.clear();
-        int startX = 6;
-        int startY = 6;
-        int col = 0;
 
+        int count = Category.values().length;
+        int sideMargin = 10;
+        int totalGap = (count - 1) * PANEL_GAP;
+        int available = this.width - sideMargin * 2 - totalGap;
+
+        // Автоматически подбираем ширину панелей, чтобы всё влезло
+        PANEL_W = Math.max(48, available / count);
+        if (PANEL_W > 95) PANEL_W = 95;
+
+        // Пересчитываем, чтобы всё было по центру
+        int totalW = count * PANEL_W + totalGap;
+        int startX = (this.width - totalW) / 2;
+
+        // Находим максимальную высоту для вертикального центрирования
+        int maxH = 0;
         for (Category c : Category.values()) {
-            int px = startX + col * (PANEL_W + 3);
-            panels.add(new PanelState(c, px, startY));
+            int listSize = byCategory.get(c).size();
+            int panelH = HEADER_H + PANEL_PAD
+                       + listSize * (MODULE_H + MODULE_GAP)
+                       + SEARCH_H + PANEL_PAD + 4;
+            if (panelH > maxH) maxH = panelH;
+        }
+        int startY = (this.height - maxH) / 2;
+
+        int col = 0;
+        for (Category c : Category.values()) {
+            PanelState p = new PanelState(c);
+            p.x = startX + col * (PANEL_W + PANEL_GAP);
+            p.y = startY;
+            int listSize = byCategory.get(c).size();
+            p.h = HEADER_H + PANEL_PAD
+                + listSize * (MODULE_H + MODULE_GAP)
+                + SEARCH_H + PANEL_PAD + 4;
+            panels.add(p);
             col++;
         }
     }
@@ -78,48 +107,50 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        // затемнение
         ctx.fill(0, 0, this.width, this.height, 0x77000000);
 
-        // Панели
         for (PanelState p : panels) {
             renderPanel(ctx, p, mouseX, mouseY);
         }
 
         // Поле поиска внизу по центру
-        renderSearchBar(ctx);
+        int sw = 160;
+        int sh = 14;
+        int sx = (this.width - sw) / 2;
+        int sy = this.height - 20;
+        ctx.fill(sx, sy, sx + sw, sy + sh, SEARCH_BG);
+        ctx.drawBorder(sx, sy, sw, sh, ACCENT);
+        ctx.drawTextWithShadow(this.textRenderer, "Поиск...",
+                sx + 5, sy + 3, TEXT_DIM);
 
-        // Подсказка внизу
+        // Подсказка
         String hint = "Нажмите здесь";
         int hw = this.textRenderer.getWidth(hint);
         ctx.drawTextWithShadow(this.textRenderer, hint,
-                (this.width - hw) / 2, this.height - 28, TEXT_DIM);
+                (this.width - hw) / 2, sy + sh + 3, TEXT_DIM);
 
         super.render(ctx, mouseX, mouseY, delta);
     }
 
     private void renderPanel(DrawContext ctx, PanelState p, int mouseX, int mouseY) {
         List<Module> list = byCategory.get(p.category);
-        int bodyH = PANEL_PAD + list.size() * (MODULE_H + MODULE_GAP);
-        int panelH = HEADER_H + bodyH + SEARCH_H + PANEL_PAD + 4;
-
-        int x = p.x, y = p.y, w = PANEL_W;
+        int x = p.x, y = p.y, w = PANEL_W, h = p.h;
 
         // Тень
-        ctx.fill(x + 2, y + 2, x + w + 2, y + panelH + 2, SHADOW);
+        ctx.fill(x + 2, y + 2, x + w + 2, y + h + 2, SHADOW);
 
         // Фон
-        ctx.fill(x, y, x + w, y + panelH, PANEL_BG);
+        ctx.fill(x, y, x + w, y + h, PANEL_BG);
 
         // Хедер
         ctx.fill(x, y, x + w, y + HEADER_H, HEADER_BG);
 
-        // Иконка-квадратик
-        ctx.fill(x + 4, y + 5, x + 10, y + 11, ACCENT);
+        // Квадратик-иконка (как в Meteor)
+        ctx.fill(x + 3, y + 5, x + 9, y + 11, ACCENT);
 
         // Название категории
         ctx.drawTextWithShadow(this.textRenderer, p.category.name,
-                x + 14, y + 4, TEXT_ON);
+                x + 12, y + 4, TEXT_ON);
 
         // Модули
         int my = y + HEADER_H + PANEL_PAD;
@@ -132,7 +163,6 @@ public class ClickGuiScreen extends Screen {
 
             if (m.isEnabled()) {
                 ctx.fill(mx, my, mx + mw, my + MODULE_H, MODULE_ON);
-                // Тонкая точка слева
                 ctx.fill(mx + 2, my + MODULE_H / 2 - 1,
                          mx + 4, my + MODULE_H / 2 + 1, 0xFFFFFFFF);
                 ctx.drawTextWithShadow(this.textRenderer, m.getName(),
@@ -148,32 +178,17 @@ public class ClickGuiScreen extends Screen {
         }
 
         // Поле поиска внутри панели
-        int searchY = y + panelH - SEARCH_H - PANEL_PAD;
+        int searchY = y + h - SEARCH_H - PANEL_PAD;
         int sx = x + PANEL_PAD;
         int sw = w - PANEL_PAD * 2;
         ctx.fill(sx, searchY, sx + sw, searchY + SEARCH_H, SEARCH_BG);
-        ctx.drawBorder(sx, searchY, sw, SEARCH_H, 0x33FFFFFF);
+        ctx.drawBorder(sx, searchY, sw, SEARCH_H, BORDER);
         ctx.drawTextWithShadow(this.textRenderer, "Поиск...",
-                sx + 4, searchY + 3, TEXT_DIM);
-    }
-
-    private void renderSearchBar(DrawContext ctx) {
-        int w = 160;
-        int h = 16;
-        int x = (this.width - w) / 2;
-        int y = this.height - 20;
-
-        ctx.fill(x + 1, y + 1, x + w + 1, y + h + 1, SHADOW);
-        ctx.fill(x, y, x + w, y + h, SEARCH_BG);
-        ctx.drawBorder(x, y, w, h, ACCENT);
-
-        ctx.drawTextWithShadow(this.textRenderer, "Поиск модулей...",
-                x + 5, y + 4, TEXT_DIM);
+                sx + 3, searchY + 3, TEXT_DIM);
     }
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
-        // Клик по хедеру панели — начать drag
         for (int i = panels.size() - 1; i >= 0; i--) {
             PanelState p = panels.get(i);
             if (mx >= p.x && mx <= p.x + PANEL_W
@@ -187,7 +202,6 @@ public class ClickGuiScreen extends Screen {
                 return true;
             }
 
-            // Клик по модулю
             List<Module> list = byCategory.get(p.category);
             int my2 = p.y + HEADER_H + PANEL_PAD;
             for (Module m : list) {
@@ -227,4 +241,4 @@ public class ClickGuiScreen extends Screen {
     public boolean shouldPause() {
         return false;
     }
-                }
+}
