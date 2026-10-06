@@ -10,13 +10,14 @@ public class ModuleManager {
     static {
         // Combat
         MODULES.add(new Module("KillAura", Category.COMBAT));
+        MODULES.add(new Module("TriggerBot", Category.COMBAT));
         MODULES.add(new Module("AutoClicker", Category.COMBAT));
 
         // Movement
         MODULES.add(new Module("Sprint", Category.MOVEMENT));
         MODULES.add(new Module("Fly", Category.MOVEMENT));
 
-        // Render (сюда всё из Visuals)
+        // Render
         MODULES.add(new Module("HUD", Category.RENDER));
         MODULES.add(new Module("Fullbright", Category.RENDER));
         MODULES.add(new Module("NoWeather", Category.RENDER));
