@@ -1,5 +1,7 @@
 package com.vailen.gui;
 
+import com.vailen.hud.HudManager;
+import com.vailen.hud.HudRenderer;
 import com.vailen.module.Module;
 import com.vailen.module.ModuleManager;
 import net.minecraft.client.gui.DrawContext;
@@ -46,8 +48,13 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+        // затемнение фона
         ctx.fill(0, 0, this.width, this.height, 0x66000000);
 
+        // HUD рисуется под GUI — чтобы можно было таскать
+        HudRenderer.render(ctx, 0f);
+
+        // ===== Панель GUI =====
         ctx.fill(panelX + 4, panelY + 4, panelX + panelW + 4, panelY + panelH + 4, 0x44000000);
         ctx.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL_BG);
         ctx.drawBorder(panelX, panelY, panelW, panelH, ACCENT);
@@ -57,6 +64,7 @@ public class ClickGuiScreen extends Screen {
 
         ctx.fill(panelX + 1, panelY + 28, panelX + panelW - 1, panelY + 29, ACCENT);
 
+        // Категории
         int catY = panelY + 40;
         int catW = 100;
         for (Category c : Category.values()) {
@@ -68,6 +76,7 @@ public class ClickGuiScreen extends Screen {
             catY += 26;
         }
 
+        // Модули
         int modX = panelX + catW + 20;
         int modY = panelY + 40;
         int modW = panelW - catW - 28;
@@ -97,11 +106,26 @@ public class ClickGuiScreen extends Screen {
         }
 
         ctx.disableScissor();
+
+        // Оверлей перетаскивания HUD — фиолетовые рамки
+        HudManager.renderEditOverlay(ctx);
+
         super.render(ctx, mouseX, mouseY, delta);
+    }
+
+    private boolean isOnPanel(double mx, double my) {
+        return mx >= panelX && mx <= panelX + panelW
+            && my >= panelY && my <= panelY + panelH;
     }
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        // 1. HUD drag — приоритет, если клик НЕ по панели
+        if (!isOnPanel(mx, my)) {
+            if (HudManager.mouseClicked(mx, my)) return true;
+        }
+
+        // 2. Заголовок панели (перетаскивание GUI)
         if (mx >= panelX && mx <= panelX + panelW
          && my >= panelY && my <= panelY + 28 && button == 0) {
             dragging = true;
@@ -110,6 +134,7 @@ public class ClickGuiScreen extends Screen {
             return true;
         }
 
+        // 3. Категории
         int catY = panelY + 40;
         int catW = 100;
         for (Category c : Category.values()) {
@@ -121,6 +146,7 @@ public class ClickGuiScreen extends Screen {
             catY += 26;
         }
 
+        // 4. Модули
         int modX = panelX + catW + 20;
         int modY = panelY + 40;
         int modW = panelW - catW - 28;
@@ -141,6 +167,7 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
+        if (HudManager.mouseDragged(mx, my)) return true;
         if (dragging) {
             panelX = (int) mx - dragX;
             panelY = (int) my - dragY;
@@ -151,6 +178,7 @@ public class ClickGuiScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mx, double my, int button) {
+        HudManager.mouseReleased();
         dragging = false;
         return super.mouseReleased(mx, my, button);
     }
