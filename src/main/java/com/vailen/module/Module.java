@@ -6,7 +6,7 @@ public class Module {
     private final String name;
     private final Category category;
     private boolean enabled;
-    private int delayMs = 100; // для TriggerBot и подобных
+    private int delayMs = 100;
 
     public Module(String name, Category category) {
         this.name = name;
