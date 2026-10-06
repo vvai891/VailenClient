@@ -1,6 +1,7 @@
 package com.vailen;
 
 import com.vailen.gui.ClickGuiScreen;
+import com.vailen.hud.HudManager;
 import com.vailen.hud.HudRenderer;
 import com.vailen.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -17,12 +18,13 @@ public class VailenClient implements ClientModInitializer {
 
     private static double oldGamma = 1.0;
     private static boolean fullbrightActive = false;
-
     private static ParticlesMode oldParticles = ParticlesMode.ALL;
     private static boolean noParticlesActive = false;
 
     @Override
     public void onInitializeClient() {
+        HudManager.load();
+
         openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.vailenclient.opengui",
                 InputUtil.Type.KEYSYM,
@@ -37,6 +39,7 @@ public class VailenClient implements ClientModInitializer {
 
             if (client.player == null || client.world == null) return;
 
+            // SPRINT
             if (ModuleManager.isEnabled("Sprint")) {
                 if (client.options.forwardKey.isPressed()
                         && !client.player.isSneaking()
@@ -46,30 +49,31 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
+            // FULLBRIGHT
             boolean fb = ModuleManager.isEnabled("Fullbright");
             if (fb && !fullbrightActive) {
                 oldGamma = client.options.getGamma().getValue();
                 fullbrightActive = true;
             }
-            if (fb) {
-                client.options.getGamma().setValue(15.0);
-            } else if (fullbrightActive) {
+            if (fb) client.options.getGamma().setValue(15.0);
+            else if (fullbrightActive) {
                 client.options.getGamma().setValue(oldGamma);
                 fullbrightActive = false;
             }
 
+            // NO PARTICLES
             boolean np = ModuleManager.isEnabled("NoParticles");
             if (np && !noParticlesActive) {
                 oldParticles = client.options.getParticles().getValue();
                 noParticlesActive = true;
             }
-            if (np) {
-                client.options.getParticles().setValue(ParticlesMode.MINIMAL);
-            } else if (noParticlesActive) {
+            if (np) client.options.getParticles().setValue(ParticlesMode.MINIMAL);
+            else if (noParticlesActive) {
                 client.options.getParticles().setValue(oldParticles);
                 noParticlesActive = false;
             }
 
+            // NO WEATHER
             if (ModuleManager.isEnabled("NoWeather")) {
                 client.world.setRainGradient(0f);
                 client.world.setThunderGradient(0f);
