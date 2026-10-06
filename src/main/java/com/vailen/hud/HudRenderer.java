@@ -75,9 +75,7 @@ public class HudRenderer {
     private static void renderArrayList(DrawContext ctx, MinecraftClient mc) {
         List<Module> enabled = new ArrayList<>();
         for (Module m : ModuleManager.getModules()) {
-            if (m.isEnabled()
-                    && m.getCategory() != com.vailen.gui.Category.RENDER
-                    && m.getCategory() != com.vailen.gui.Category.VISUALS) {
+            if (m.isEnabled() && m.getCategory() != com.vailen.gui.Category.RENDER) {
                 enabled.add(m);
             }
         }
@@ -234,4 +232,4 @@ public class HudRenderer {
         } catch (Exception ignored) {}
         return 0;
     }
-                 }
+}
