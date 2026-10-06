@@ -7,6 +7,9 @@
   "entrypoints": {
     "client": ["com.vailen.VailenClient"]
   },
+  "mixins": [
+    "vailenclient.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.16.0",
     "fabric-api": "*",
