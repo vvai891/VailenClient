@@ -21,7 +21,7 @@ public class ModuleManager {
         MODULES.add(new Module("NoWeather", Category.VISUALS));
         MODULES.add(new Module("NoParticles", Category.VISUALS));
 
-        // Render
+        // Render (HUD)
         MODULES.add(new Module("Watermark", Category.RENDER));
         MODULES.add(new Module("ArrayList", Category.RENDER));
         MODULES.add(new Module("FPS Display", Category.RENDER));
