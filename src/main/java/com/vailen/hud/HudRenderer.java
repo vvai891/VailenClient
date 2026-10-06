@@ -6,180 +6,232 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.util.hit.EntityHitResult;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
 public class HudRenderer {
 
     private static final int ACCENT   = 0xFF7A5CFF;
-    private static final int BG       = 0x88101016;
+    private static final int BG       = 0xB0101016;
+    private static final int BG_DARK  = 0xE0101016;
     private static final int TEXT     = 0xFFFFFFFF;
     private static final int TEXT_DIM = 0xFFAAAAAA;
-    private static final int HP_BG    = 0xFF330000;
     private static final int HP_RED   = 0xFFFF4444;
 
     public static void render(DrawContext ctx, float tickDelta) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null || mc.world == null) return;
 
-        if (ModuleManager.isEnabled("Watermark"))    renderWatermark(ctx, mc);
-        if (ModuleManager.isEnabled("FPS Display"))  renderFps(ctx, mc);
-        if (ModuleManager.isEnabled("Ping"))         renderPing(ctx, mc);
-        if (ModuleManager.isEnabled("Coordinates"))  renderCoords(ctx, mc);
-        if (ModuleManager.isEnabled("ArrayList"))    renderArrayList(ctx, mc);
-        if (ModuleManager.isEnabled("TargetHUD"))    renderTargetHud(ctx, mc);
+        if (!ModuleManager.isEnabled("HUD")) return;
+
+        renderWatermark(ctx, mc);
+        renderArrayList(ctx, mc);
+        renderTargetHud(ctx, mc);
+        renderPotions(ctx, mc);
+        renderPlayerInfo(ctx, mc);
+        renderCoords(ctx, mc);
     }
 
-    private static int resolveX(HudElement e, DrawContext ctx) {
-        if (e.x < 0) return ctx.getScaledWindowWidth() - e.width - 8;
-        return e.x;
-    }
-
+    // ========== WATERMARK ==========
     private static void renderWatermark(DrawContext ctx, MinecraftClient mc) {
-        HudElement e = HudManager.get("Watermark");
-        String text = "VailenClient";
-        int w = mc.textRenderer.getWidth(text) + 14;
-        int h = 18;
-        e.width = w; e.height = h;
-        int x = resolveX(e, ctx);
-        int y = e.y;
-        ctx.fill(x, y, x + w, y + h, BG);
-        ctx.drawBorder(x, y, w, h, ACCENT);
-        ctx.drawTextWithShadow(mc.textRenderer, "§l" + text, x + 7, y + 5, ACCENT);
+        String name = "§lVailenClient";
+        String fps = mc.getCurrentFps() + " FPS";
+        String time = getTime();
+        String ping = getPing(mc) + " ms";
+        String tps = "20.0 TPS";
+
+        int pad = 6;
+        int h = 16;
+        int x = 6, y = 6;
+        int w = mc.textRenderer.getWidth(name) + mc.textRenderer.getWidth(fps)
+              + mc.textRenderer.getWidth(time) + mc.textRenderer.getWidth(ping)
+              + mc.textRenderer.getWidth(tps) + pad * 12;
+
+        ctx.fill(x, y, x + w, y + h, BG_DARK);
+        ctx.fill(x, y, x + w, y + 1, ACCENT);
+
+        int cx = x + pad;
+        ctx.drawTextWithShadow(mc.textRenderer, name, cx, y + 4, ACCENT);
+        cx += mc.textRenderer.getWidth(name) + pad * 2;
+
+        ctx.drawTextWithShadow(mc.textRenderer, fps, cx, y + 4, TEXT);
+        cx += mc.textRenderer.getWidth(fps) + pad * 2;
+
+        ctx.drawTextWithShadow(mc.textRenderer, time, cx, y + 4, TEXT_DIM);
+        cx += mc.textRenderer.getWidth(time) + pad * 2;
+
+        ctx.drawTextWithShadow(mc.textRenderer, ping, cx, y + 4, TEXT);
+        cx += mc.textRenderer.getWidth(ping) + pad * 2;
+
+        ctx.drawTextWithShadow(mc.textRenderer, tps, cx, y + 4, TEXT_DIM);
     }
 
-    private static void renderFps(DrawContext ctx, MinecraftClient mc) {
-        HudElement e = HudManager.get("FPS Display");
-        String text = mc.getCurrentFps() + " FPS";
-        int w = mc.textRenderer.getWidth(text) + 12;
-        int h = 14;
-        e.width = w; e.height = h;
-        int x = resolveX(e, ctx);
-        int y = e.y;
-        ctx.fill(x, y, x + w, y + h, BG);
-        ctx.drawTextWithShadow(mc.textRenderer, text, x + 6, y + 3, TEXT);
-    }
-
-    private static void renderPing(DrawContext ctx, MinecraftClient mc) {
-        if (mc.player == null) return;
-        HudElement e = HudManager.get("Ping");
-        int ping = 0;
-        try {
-            var entry = mc.getNetworkHandler() != null
-                    ? mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid())
-                    : null;
-            if (entry != null) ping = entry.getLatency();
-        } catch (Exception ignored) {}
-
-        String text = ping + " ms";
-        int w = mc.textRenderer.getWidth(text) + 12;
-        int h = 14;
-        e.width = w; e.height = h;
-        int x = resolveX(e, ctx);
-        int y = e.y;
-        ctx.fill(x, y, x + w, y + h, BG);
-        ctx.drawTextWithShadow(mc.textRenderer, text, x + 6, y + 3, TEXT_DIM);
-    }
-
-    private static void renderCoords(DrawContext ctx, MinecraftClient mc) {
-        if (mc.player == null) return;
-        HudElement e = HudManager.get("Coordinates");
-        String text = String.format("XYZ: %.0f, %.0f, %.0f",
-                mc.player.getX(), mc.player.getY(), mc.player.getZ());
-        int w = mc.textRenderer.getWidth(text) + 12;
-        int h = 14;
-        e.width = w; e.height = h;
-        int x = resolveX(e, ctx);
-        int y = e.y;
-        ctx.fill(x, y, x + w, y + h, BG);
-        ctx.drawTextWithShadow(mc.textRenderer, text, x + 6, y + 3, TEXT);
-    }
-
+    // ========== ARRAYLIST ==========
     private static void renderArrayList(DrawContext ctx, MinecraftClient mc) {
-        HudElement el = HudManager.get("ArrayList");
         List<Module> enabled = new ArrayList<>();
         for (Module m : ModuleManager.getModules()) {
-            if (m.isEnabled() && m.getCategory() != com.vailen.gui.Category.RENDER) {
+            if (m.isEnabled()
+                    && m.getCategory() != com.vailen.gui.Category.RENDER
+                    && m.getCategory() != com.vailen.gui.Category.VISUALS) {
                 enabled.add(m);
             }
         }
-        if (enabled.isEmpty()) { el.width = 0; el.height = 0; return; }
+        if (enabled.isEmpty()) return;
 
         enabled.sort(Comparator.comparingInt(m -> -mc.textRenderer.getWidth(m.getName())));
 
-        int y = el.y;
-        int maxW = 0;
-        int startX = el.x;
-        List<int[]> positions = new ArrayList<>();
+        int y = 6 + 16 + 4;
+        int x = 6;
 
         for (Module m : enabled) {
-            String name = m.getName();
-            int textW = mc.textRenderer.getWidth(name);
-            int w = textW + 14;
+            String text = m.getName();
+            int w = mc.textRenderer.getWidth(text) + 12;
             int h = 14;
-            int x = (startX < 0) ? ctx.getScaledWindowWidth() - w - 8 : startX;
-            positions.add(new int[]{x, y, w, h});
-            if (w > maxW) maxW = w;
+
+            ctx.fill(x, y, x + w, y + h, BG);
+            ctx.fill(x, y, x + 2, y + h, ACCENT);
+            ctx.drawTextWithShadow(mc.textRenderer, text, x + 7, y + 3, TEXT);
+
             y += h + 2;
         }
-
-        for (int i = 0; i < enabled.size(); i++) {
-            int[] p = positions.get(i);
-            ctx.fill(p[0], p[1], p[0] + p[2], p[1] + p[3], BG);
-            ctx.fill(p[0], p[1], p[0] + 2, p[1] + p[3], ACCENT);
-            ctx.drawTextWithShadow(mc.textRenderer, enabled.get(i).getName(), p[0] + 8, p[1] + 3, TEXT);
-        }
-
-        el.width = maxW;
-        el.height = y - el.y;
-        if (!positions.isEmpty()) el.x = positions.get(0)[0];
     }
 
+    // ========== TARGET HUD ==========
     private static void renderTargetHud(DrawContext ctx, MinecraftClient mc) {
-        HudElement el = HudManager.get("TargetHUD");
-
         Entity target = null;
         if (mc.crosshairTarget instanceof EntityHitResult ehr) {
             target = ehr.getEntity();
         }
-        if (!(target instanceof LivingEntity living)) { el.width = 0; el.height = 0; return; }
+        if (!(target instanceof LivingEntity living)) return;
 
         String name = living.getName().getString();
         float hp = living.getHealth();
         float maxHp = living.getMaxHealth();
-        float ratio = Math.max(0f, Math.min(1f, hp / maxHp));
+        int hearts = (int) Math.ceil(hp / 2.0);
+        int maxHearts = (int) Math.ceil(maxHp / 2.0);
+        if (maxHearts > 10) maxHearts = 10;
+        if (hearts > 10) hearts = 10;
 
-        int panelW = 150;
-        int panelH = 42;
-        int x = el.x;
-        int y = el.y;
-        if (x < 0) x = (ctx.getScaledWindowWidth() - panelW) / 2;
-        if (y < 0) y = ctx.getScaledWindowHeight() / 2 + 40;
+        int panelW = 130;
+        int panelH = 30;
+        int x = (ctx.getScaledWindowWidth() - panelW) / 2;
+        int y = 30;
 
         ctx.fill(x + 2, y + 2, x + panelW + 2, y + panelH + 2, 0x44000000);
-        ctx.fill(x, y, x + panelW, y + panelH, BG);
-        ctx.drawBorder(x, y, panelW, panelH, ACCENT);
-        ctx.fill(x, y, x + 3, y + panelH, ACCENT);
+        ctx.fill(x, y, x + panelW, y + panelH, BG_DARK);
+        ctx.drawBorder(x, y, panelW, panelH, 0xFF303030);
 
-        ctx.drawTextWithShadow(mc.textRenderer, name, x + 10, y + 8, TEXT);
+        ctx.drawTextWithShadow(mc.textRenderer, name, x + 6, y + 5, TEXT);
+
         String hpText = String.format("%.1f", hp);
-        int hpTextW = mc.textRenderer.getWidth(hpText);
-        ctx.drawTextWithShadow(mc.textRenderer, hpText, x + panelW - hpTextW - 10, y + 8, 0xFFFF5555);
+        int hpW = mc.textRenderer.getWidth(hpText);
+        ctx.drawTextWithShadow(mc.textRenderer, hpText, x + panelW - hpW - 6, y + 5, HP_RED);
 
-        int barX = x + 10;
-        int barY = y + 26;
-        int barW = panelW - 20;
-        int barH = 8;
-        ctx.fill(barX, barY, barX + barW, barY + barH, HP_BG);
-        ctx.fill(barX, barY, barX + (int)(barW * ratio), barY + barH, HP_RED);
-        ctx.drawBorder(barX, barY, barW, barH, ACCENT);
-
-        el.width = panelW;
-        el.height = panelH;
-        el.x = x;
-        el.y = y;
+        int heartY = y + 17;
+        int heartX = x + 6;
+        for (int i = 0; i < maxHearts; i++) {
+            int color = (i < hearts) ? 0xFFFF4444 : 0xFF3A1010;
+            ctx.fill(heartX, heartY, heartX + 8, heartY + 7, color);
+            heartX += 9;
+        }
     }
-                }
+
+    // ========== POTIONS ==========
+    private static void renderPotions(DrawContext ctx, MinecraftClient mc) {
+        if (mc.player == null) return;
+        Collection<StatusEffectInstance> effects = mc.player.getStatusEffects();
+        if (effects.isEmpty()) return;
+
+        List<StatusEffectInstance> list = new ArrayList<>(effects);
+
+        int panelW = 130;
+        int lineH = 14;
+        int panelH = 16 + list.size() * (lineH + 1) + 4;
+        int x = ctx.getScaledWindowWidth() - panelW - 6;
+        int y = 6;
+
+        ctx.fill(x, y, x + panelW, y + panelH, BG_DARK);
+        ctx.fill(x, y, x + 2, y + panelH, ACCENT);
+        ctx.drawTextWithShadow(mc.textRenderer, "Active potions", x + 8, y + 4, TEXT);
+
+        int cy = y + 16;
+        for (StatusEffectInstance e : list) {
+            String name = e.getEffectType().value().getName().getString();
+            int seconds = e.getDuration() / 20;
+            String dur = String.format("%d:%02d", seconds / 60, seconds % 60);
+
+            ctx.drawTextWithShadow(mc.textRenderer, name, x + 8, cy, TEXT_DIM);
+            int dw = mc.textRenderer.getWidth(dur);
+            ctx.drawTextWithShadow(mc.textRenderer, dur, x + panelW - dw - 6, cy, TEXT);
+            cy += lineH + 1;
+        }
+    }
+
+    // ========== PLAYER INFO ==========
+    private static void renderPlayerInfo(DrawContext ctx, MinecraftClient mc) {
+        if (mc.player == null) return;
+
+        int panelW = 140;
+        int panelH = 56;
+        int x = ctx.getScaledWindowWidth() - panelW - 6;
+        int y = 6;
+
+        if (!mc.player.getStatusEffects().isEmpty()) {
+            y += 16 + mc.player.getStatusEffects().size() * 15 + 8;
+        }
+
+        ctx.fill(x, y, x + panelW, y + panelH, BG_DARK);
+        ctx.fill(x, y, x + 2, y + panelH, ACCENT);
+        ctx.drawTextWithShadow(mc.textRenderer, "PlayerInfo", x + 8, y + 4, ACCENT);
+
+        String nick = "Nick: " + mc.player.getName().getString();
+        String ping = "Ping: " + getPing(mc) + " ms";
+        String server = "Server: ";
+        try {
+            if (mc.getCurrentServerEntry() != null) server += mc.getCurrentServerEntry().address;
+            else server += "Singleplayer";
+        } catch (Exception ignored) { server += "Unknown"; }
+
+        ctx.drawTextWithShadow(mc.textRenderer, nick, x + 8, y + 18, TEXT);
+        ctx.drawTextWithShadow(mc.textRenderer, ping, x + 8, y + 30, TEXT_DIM);
+        ctx.drawTextWithShadow(mc.textRenderer, server, x + 8, y + 42, TEXT_DIM);
+    }
+
+    // ========== COORDINATES ==========
+    private static void renderCoords(DrawContext ctx, MinecraftClient mc) {
+        if (mc.player == null) return;
+        String text = String.format("XYZ: %.0f, %.0f, %.0f",
+                mc.player.getX(), mc.player.getY(), mc.player.getZ());
+        int w = mc.textRenderer.getWidth(text) + 12;
+        int h = 14;
+        int x = 6;
+        int y = 6 + 16 + 4 + 14 * 3 + 6;
+
+        ctx.fill(x, y, x + w, y + h, BG);
+        ctx.drawTextWithShadow(mc.textRenderer, text, x + 6, y + 3, TEXT);
+    }
+
+    // ========== Утилиты ==========
+    private static String getTime() {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        return String.format("%02d:%02d:%02d",
+                c.get(java.util.Calendar.HOUR_OF_DAY),
+                c.get(java.util.Calendar.MINUTE),
+                c.get(java.util.Calendar.SECOND));
+    }
+
+    private static int getPing(MinecraftClient mc) {
+        try {
+            var entry = mc.getNetworkHandler() != null && mc.player != null
+                    ? mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid())
+                    : null;
+            if (entry != null) return entry.getLatency();
+        } catch (Exception ignored) {}
+        return 0;
+    }
+                 }
