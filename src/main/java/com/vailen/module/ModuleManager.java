@@ -28,6 +28,9 @@ public class ModuleManager {
         MODULES.add(new Module("Trajectories", Category.RENDER));
         MODULES.add(new Module("ItemPhysics", Category.RENDER));
         MODULES.add(new Module("SwingAnimation", Category.RENDER));
+        MODULES.add(new Module("ArmorHUD", Category.RENDER));
+        MODULES.add(new Module("BPS", Category.RENDER));
+        MODULES.add(new Module("Keystrokes", Category.RENDER));
 
         // Misc
         MODULES.add(new Module("ChestStealer", Category.MISC));
