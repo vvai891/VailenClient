@@ -36,7 +36,6 @@ public class VailenClient implements ClientModInitializer {
     private static boolean noParticlesActive = false;
 
     private static long lastTriggerHit = 0L;
-    private static long lastKillAuraHit = 0L;
     private static long lastAutoTotem = 0L;
     private static long lastChestSteal = 0L;
 
@@ -72,7 +71,6 @@ public class VailenClient implements ClientModInitializer {
 
             if (client.player == null || client.world == null) return;
 
-            // KEYBINDS
             for (Module m : ModuleManager.getModules()) {
                 if (!m.hasKeybind()) continue;
                 boolean pressed = InputUtil.isKeyPressed(
@@ -84,7 +82,6 @@ public class VailenClient implements ClientModInitializer {
                 keyStates.put(m.getName(), pressed);
             }
 
-            // SPRINT
             if (ModuleManager.isEnabled("Sprint")) {
                 if (client.options.forwardKey.isPressed()
                         && !client.player.isSneaking()
@@ -94,19 +91,15 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // AUTOTOTEM
             if (ModuleManager.isEnabled("AutoTotem")) {
                 long now = System.currentTimeMillis();
                 if (now - lastAutoTotem >= 200) {
                     lastAutoTotem = now;
-
                     boolean offhandHasTotem =
                             client.player.getOffHandStack().isOf(net.minecraft.item.Items.TOTEM_OF_UNDYING);
-
                     if (!offhandHasTotem) {
                         var inv = client.player.playerScreenHandler;
                         int totemSlot = -1;
-
                         for (int i = 9; i <= 44; i++) {
                             var stack = inv.getSlot(i).getStack();
                             if (stack.isOf(net.minecraft.item.Items.TOTEM_OF_UNDYING)) {
@@ -114,7 +107,6 @@ public class VailenClient implements ClientModInitializer {
                                 break;
                             }
                         }
-
                         if (totemSlot != -1) {
                             client.interactionManager.clickSlot(
                                     inv.syncId,
@@ -128,7 +120,6 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // CHESTSTEALER
             if (ModuleManager.isEnabled("ChestStealer")) {
                 if (client.currentScreen instanceof net.minecraft.client.gui.screen.ingame.HandledScreen<?> hs) {
                     var handler = hs.getScreenHandler();
@@ -152,7 +143,6 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // AUTOATTACK
             if (ModuleManager.isEnabled("AutoAttack")) {
                 if (client.crosshairTarget instanceof EntityHitResult ehr) {
                     Entity target = ehr.getEntity();
@@ -167,7 +157,6 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // TRIGGERBOT
             if (ModuleManager.isEnabled("TriggerBot")) {
                 if (client.crosshairTarget instanceof EntityHitResult ehr) {
                     Entity target = ehr.getEntity();
@@ -187,7 +176,6 @@ public class VailenClient implements ClientModInitializer {
                 }
             }
 
-            // FULLBRIGHT
             boolean fb = ModuleManager.isEnabled("Fullbright");
             if (fb && !fullbrightActive) {
                 oldGamma = client.options.getGamma().getValue();
@@ -199,7 +187,6 @@ public class VailenClient implements ClientModInitializer {
                 fullbrightActive = false;
             }
 
-            // NO PARTICLES
             boolean np = ModuleManager.isEnabled("NoParticles");
             if (np && !noParticlesActive) {
                 oldParticles = client.options.getParticles().getValue();
@@ -211,7 +198,6 @@ public class VailenClient implements ClientModInitializer {
                 noParticlesActive = false;
             }
 
-            // NO WEATHER
             if (ModuleManager.isEnabled("NoWeather")) {
                 client.world.setRainGradient(0f);
                 client.world.setThunderGradient(0f);
@@ -225,7 +211,6 @@ public class VailenClient implements ClientModInitializer {
 
     private static void handleBindCommand(MinecraftClient mc, String message) {
         String[] parts = message.trim().split("\\s+");
-
         if (parts.length < 2) {
             sendMsg(mc, "§e.bind add <модуль> <клавиша>");
             sendMsg(mc, "§e.bind remove <модуль>");
@@ -233,39 +218,22 @@ public class VailenClient implements ClientModInitializer {
             sendMsg(mc, "§e.bind clear");
             return;
         }
-
         String sub = parts[1].toLowerCase();
-
         switch (sub) {
             case "add": {
-                if (parts.length < 4) {
-                    sendMsg(mc, "§cИспользование: .bind add <модуль> <клавиша>");
-                    return;
-                }
+                if (parts.length < 4) { sendMsg(mc, "§c.bind add <модуль> <клавиша>"); return; }
                 Module m = findModule(parts[2]);
-                if (m == null) {
-                    sendMsg(mc, "§cМодуль не найден: §f" + parts[2]);
-                    return;
-                }
+                if (m == null) { sendMsg(mc, "§cМодуль не найден: §f" + parts[2]); return; }
                 int key = keyFromName(parts[3]);
-                if (key <= 0) {
-                    sendMsg(mc, "§cНеизвестная клавиша: §f" + parts[3]);
-                    return;
-                }
+                if (key <= 0) { sendMsg(mc, "§cНеизвестная клавиша: §f" + parts[3]); return; }
                 m.setKeybind(key);
                 sendMsg(mc, "§aМодуль §f" + m.getName() + " §aпривязан к §d" + m.getKeybindName());
                 break;
             }
             case "remove": {
-                if (parts.length < 3) {
-                    sendMsg(mc, "§cИспользование: .bind remove <модуль>");
-                    return;
-                }
+                if (parts.length < 3) { sendMsg(mc, "§c.bind remove <модуль>"); return; }
                 Module m = findModule(parts[2]);
-                if (m == null) {
-                    sendMsg(mc, "§cМодуль не найден: §f" + parts[2]);
-                    return;
-                }
+                if (m == null) { sendMsg(mc, "§cМодуль не найден"); return; }
                 m.setKeybind(-1);
                 sendMsg(mc, "§aБинд снят с §f" + m.getName());
                 break;
@@ -286,8 +254,7 @@ public class VailenClient implements ClientModInitializer {
                 sendMsg(mc, "§aВсе бинды сброшены");
                 break;
             }
-            default:
-                sendMsg(mc, "§cНеизвестная подкоманда: §f" + sub);
+            default: sendMsg(mc, "§cНеизвестная подкоманда");
         }
     }
 
@@ -300,50 +267,31 @@ public class VailenClient implements ClientModInitializer {
 
     private static int keyFromName(String name) {
         String n = name.toUpperCase();
-
         if (n.startsWith("F") && n.length() <= 3) {
             try {
                 int num = Integer.parseInt(n.substring(1));
-                if (num >= 1 && num <= 25) {
-                    return GLFW.GLFW_KEY_F1 + (num - 1);
-                }
+                if (num >= 1 && num <= 25) return GLFW.GLFW_KEY_F1 + (num - 1);
             } catch (Exception ignored) {}
         }
-
         if (n.length() == 1) {
             char c = n.charAt(0);
             if (c >= 'A' && c <= 'Z') return GLFW.GLFW_KEY_A + (c - 'A');
             if (c >= '0' && c <= '9') return GLFW.GLFW_KEY_0 + (c - '0');
         }
-
         switch (n) {
-            case "RSHIFT":  return GLFW.GLFW_KEY_RIGHT_SHIFT;
-            case "LSHIFT":  return GLFW.GLFW_KEY_LEFT_SHIFT;
-            case "RCTRL":   return GLFW.GLFW_KEY_RIGHT_CONTROL;
-            case "LCTRL":   return GLFW.GLFW_KEY_LEFT_CONTROL;
-            case "RALT":    return GLFW.GLFW_KEY_RIGHT_ALT;
-            case "LALT":    return GLFW.GLFW_KEY_LEFT_ALT;
-            case "SPACE":   return GLFW.GLFW_KEY_SPACE;
-            case "TAB":     return GLFW.GLFW_KEY_TAB;
-            case "ENTER":   return GLFW.GLFW_KEY_ENTER;
-            case "ESC":     return GLFW.GLFW_KEY_ESCAPE;
-            case "BACKSPACE": return GLFW.GLFW_KEY_BACKSPACE;
-            case "MINUS":   return GLFW.GLFW_KEY_MINUS;
-            case "EQUAL":   return GLFW.GLFW_KEY_EQUAL;
-            case "LBRACKET":  return GLFW.GLFW_KEY_LEFT_BRACKET;
-            case "RBRACKET":  return GLFW.GLFW_KEY_RIGHT_BRACKET;
-            case "SEMICOLON": return GLFW.GLFW_KEY_SEMICOLON;
-            case "APOSTROPHE": return GLFW.GLFW_KEY_APOSTROPHE;
-            case "COMMA":   return GLFW.GLFW_KEY_COMMA;
-            case "PERIOD":  return GLFW.GLFW_KEY_PERIOD;
-            case "SLASH":   return GLFW.GLFW_KEY_SLASH;
+            case "RSHIFT": return GLFW.GLFW_KEY_RIGHT_SHIFT;
+            case "LSHIFT": return GLFW.GLFW_KEY_LEFT_SHIFT;
+            case "RCTRL":  return GLFW.GLFW_KEY_RIGHT_CONTROL;
+            case "LCTRL":  return GLFW.GLFW_KEY_LEFT_CONTROL;
+            case "SPACE":  return GLFW.GLFW_KEY_SPACE;
+            case "TAB":    return GLFW.GLFW_KEY_TAB;
+            case "ENTER":  return GLFW.GLFW_KEY_ENTER;
+            case "ESC":    return GLFW.GLFW_KEY_ESCAPE;
         }
         return -1;
     }
 
     private static void sendMsg(MinecraftClient mc, String text) {
-        if (mc.player != null) {
-            mc.player.sendMessage(Text.literal(text), false);
-        }
+        if (mc.player != null) mc.player.sendMessage(Text.literal(text), false);
     }
-                                }
+}
