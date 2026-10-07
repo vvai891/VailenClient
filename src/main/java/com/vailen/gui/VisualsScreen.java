@@ -16,17 +16,12 @@ public class VisualsScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
 
-        int width = this.width;
-        int height = this.height;
-
-        context.fill(0, 0, width, height, 0x99000000);
-
         int guiWidth = 420;
         int guiHeight = 260;
+        int x = (this.width - guiWidth) / 2;
+        int y = (this.height - guiHeight) / 2;
 
-        int x = (width - guiWidth) / 2;
-        int y = (height - guiHeight) / 2;
-
+        context.fill(0, 0, this.width, this.height, 0x99000000);
         context.fill(x - 4, y - 4, x + guiWidth + 4, y + guiHeight + 4, 0x66000000);
         context.fill(x, y, x + guiWidth, y + guiHeight, 0xFF101116);
         context.fill(x, y, x + guiWidth, y + 2, 0xFF5865F2);
@@ -96,4 +91,4 @@ public class VisualsScreen extends Screen {
     public boolean shouldPause() {
         return false;
     }
-                   }
+    }
