@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.VertexRendering;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -49,7 +49,8 @@ public class StorageESP {
                 else if (be instanceof FurnaceBlockEntity)   { r = 1.0f; g = 0.6f; b = 0.0f; }
                 else                                         { r = 1.0f; g = 0.8f; b = 0.0f; }
 
-                VertexRendering.drawBox(matrices, vc, box, r, g, b, 1.0f);
+                // ИСПРАВЛЕНО: WorldRenderer вместо VertexRendering
+                WorldRenderer.drawBox(matrices, vc, box, r, g, b, 1.0f);
             }
         });
     }
