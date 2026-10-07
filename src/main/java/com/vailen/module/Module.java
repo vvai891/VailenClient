@@ -23,6 +23,8 @@ public class Module {
     private boolean noEat = true;
 
     private int keybind = -1;
+    private int respawnMode = 0;
+    private int swapMode = 0;
 
     public Module(String name, Category category) {
         this.name = name;
@@ -127,6 +129,18 @@ public class Module {
             }
         }
         return name.toUpperCase();
+    }
+
+    public int getRespawnMode() { return respawnMode; }
+    public void setRespawnMode(int v) { this.respawnMode = v; }
+    public String getRespawnModeName() {
+        return respawnMode == 0 ? "Шар" : "Тотем";
+    }
+
+    public int getSwapMode() { return swapMode; }
+    public void setSwapMode(int v) { this.swapMode = v; }
+    public String getSwapModeName() {
+        return swapMode == 0 ? "Тотем" : "Шар";
     }
 
     public boolean hasSlider() {
