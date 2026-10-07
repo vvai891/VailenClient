@@ -3,7 +3,6 @@ package com.vailen;
 import com.vailen.gui.ClickGuiScreen;
 import com.vailen.gui.VisualsScreen;
 import com.vailen.hud.HudRenderer;
-import com.vailen.hud.StorageESP;
 import com.vailen.module.Module;
 import com.vailen.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -44,8 +43,6 @@ public class VailenClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        StorageESP.register();
-
         openGuiKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.vailenclient.opengui",
                 InputUtil.Type.KEYSYM,
@@ -297,4 +294,4 @@ public class VailenClient implements ClientModInitializer {
     private static void sendMsg(MinecraftClient mc, String text) {
         if (mc.player != null) mc.player.sendMessage(Text.literal(text), false);
     }
-                }
+                                }
