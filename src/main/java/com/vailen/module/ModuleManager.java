@@ -12,6 +12,8 @@ public class ModuleManager {
         MODULES.add(new Module("TriggerBot", Category.COMBAT));
         MODULES.add(new Module("AutoAttack", Category.COMBAT));
         MODULES.add(new AutoTotem());
+        MODULES.add(new AutoSwap());
+        MODULES.add(new AutoRespawn());
 
         // Movement
         MODULES.add(new Module("Sprint", Category.MOVEMENT));
