@@ -24,7 +24,6 @@ public class ModuleManager {
         MODULES.add(new Module("NoParticles", Category.RENDER));
         MODULES.add(new Module("ESP", Category.RENDER));
         MODULES.add(new Module("Nametags", Category.RENDER));
-        MODULES.add(new Module("StorageESP", Category.RENDER));
         MODULES.add(new Module("Trajectories", Category.RENDER));
         MODULES.add(new Module("ItemPhysics", Category.RENDER));
         MODULES.add(new Module("SwingAnimation", Category.RENDER));
